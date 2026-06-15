@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 
 class ColorExtractorAdapter(ColorExtractorPort):
     def extract_colors(self, url: str) -> Tuple[ColorPalette, Typography]:
-        outputs_dir = Path("data")
+        outputs_dir = Path("data/current")
         outputs_dir.mkdir(parents=True, exist_ok=True)
         
         # 1. Take a screenshot & extract typography

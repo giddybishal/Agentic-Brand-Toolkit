@@ -14,7 +14,7 @@ class LogoExtractorAdapter(LogoExtractorPort):
         brand_name = domain.replace('www.', '').split('.')[0].lower()
         
         # We save to data
-        logos_dir = Path("data")
+        logos_dir = Path("data/current")
         logos_dir.mkdir(parents=True, exist_ok=True)
         
         with sync_playwright() as p:
