@@ -1,0 +1,47 @@
+from typing import Dict, Any, Type
+from pydantic import BaseModel, Field
+from .base_tool import BrandTool
+from ..services.crawl_service import CrawlService
+
+class CrawlToolSchema(BaseModel):
+    url: str = Field(description="The website URL to crawl")
+
+class CrawlTool(BrandTool):
+    name = "crawl_website"
+    description = """
+    Description:
+    Use this tool as the very first step to collect website content.
+    
+    Input:
+    Website URL.
+    
+    Output:
+    Raw website content (HTML/Text).
+    
+    This tool extracts:
+    - Text content from the website
+    - General brand messaging and copy
+    
+    The output is commonly used by:
+    - Visual identity tool
+    - Brand profile tool
+    
+    This tool should only be called once at the start of the workflow.
+    """
+    args_schema = CrawlToolSchema
+
+    def __init__(self, crawl_service: CrawlService):
+        self.crawl_service = crawl_service
+
+    def execute(self, state: Dict[str, Any], args: Dict[str, Any]) -> Dict[str, Any]:
+        url = args.get("url")
+        if not url:
+            url = state.get("website_url", "")
+        
+        print(f"[*] Tool executing: Crawling website: {url} ...")
+        content = self.crawl_service.crawl_website(url)
+        
+        return {
+            "website_content": content,
+            "tool_message": f"Successfully crawled {url}. Website content has been extracted and saved to memory. You can now use this content for visual identity or brand profile generation."
+        }

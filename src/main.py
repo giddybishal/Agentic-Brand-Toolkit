@@ -20,19 +20,20 @@ from src.application.services.social_simulation_service import SocialSimulationS
 from src.application.services.analytics_service import EngagementAnalyticsService
 from src.application.services.strategy_service import StrategyService
 
-from src.application.graph.nodes.crawl_node import CrawlNode
-from src.application.graph.nodes.visual_identity_node import VisualIdentityNode
-from src.application.graph.nodes.brand_profile_node import BrandProfileNode
-from src.application.graph.nodes.creator_guidelines_node import CreatorGuidelinesNode
-from src.application.graph.nodes.toolkit_builder_node import ToolkitBuilderNode
-from src.application.graph.nodes.competitor_discovery_node import CompetitorDiscoveryNode
-from src.application.graph.nodes.competitor_intelligence_node import CompetitorIntelligenceNode
-from src.application.graph.nodes.social_dataset_node import SocialDatasetNode
-from src.application.graph.nodes.engagement_analytics_node import EngagementAnalyticsNode
-from src.application.graph.nodes.gap_analysis_node import GapAnalysisNode
-from src.application.graph.nodes.growth_strategy_node import GrowthStrategyNode
-
-from src.application.graph.graph_builder import BrandToolkitGraphBuilder
+from src.application.tools import (
+    CrawlTool,
+    VisualIdentityTool,
+    BrandProfileTool,
+    CompetitorDiscoveryTool,
+    CompetitorIntelligenceTool,
+    SocialDatasetTool,
+    EngagementAnalyticsTool,
+    GapAnalysisTool,
+    GrowthStrategyTool,
+    CreatorGuidelinesTool,
+    ToolkitBuilderTool
+)
+from src.application.agents.brand_intelligence_agent import BrandIntelligenceAgent
 
 def main():
     url = sys.argv[1] if len(sys.argv) > 1 else "https://www.drinklucent.com/"
@@ -56,38 +57,25 @@ def main():
     analytics_service = EngagementAnalyticsService()
     strategy_service = StrategyService(llm)
 
-    # 3. Initialize Nodes
-    crawl_node = CrawlNode(crawl_service)
-    visual_node = VisualIdentityNode(visual_service)
-    profile_node = BrandProfileNode(profile_service)
-    guidelines_node = CreatorGuidelinesNode(guidelines_service)
-    toolkit_node = ToolkitBuilderNode(toolkit_service)
-    
-    comp_discovery_node = CompetitorDiscoveryNode(competitor_service)
-    comp_intel_node = CompetitorIntelligenceNode(competitor_service)
-    social_node = SocialDatasetNode(social_service)
-    analytics_node = EngagementAnalyticsNode(analytics_service)
-    gap_node = GapAnalysisNode(strategy_service)
-    growth_node = GrowthStrategyNode(strategy_service)
+    # 3. Initialize Tools
+    tools = [
+        CrawlTool(crawl_service),
+        VisualIdentityTool(visual_service),
+        BrandProfileTool(profile_service),
+        CompetitorDiscoveryTool(competitor_service),
+        CompetitorIntelligenceTool(competitor_service),
+        SocialDatasetTool(social_service),
+        EngagementAnalyticsTool(analytics_service),
+        GapAnalysisTool(strategy_service),
+        GrowthStrategyTool(strategy_service),
+        CreatorGuidelinesTool(guidelines_service),
+        ToolkitBuilderTool(toolkit_service)
+    ]
 
-    # 4. Build Graph
-    builder = BrandToolkitGraphBuilder(
-        crawl_node=crawl_node,
-        visual_node=visual_node,
-        profile_node=profile_node,
-        competitor_discovery_node=comp_discovery_node,
-        competitor_intelligence_node=comp_intel_node,
-        social_dataset_node=social_node,
-        engagement_analytics_node=analytics_node,
-        gap_analysis_node=gap_node,
-        growth_strategy_node=growth_node,
-        guidelines_node=guidelines_node,
-        toolkit_node=toolkit_node
-    )
-    graph = builder.build()
+    # 4. Build Agent
+    agent = BrandIntelligenceAgent(tools)
 
     # 5. Run Graph
-    # Clear previous artifacts
     output_dir = Path("data/current")
     if output_dir.exists():
         shutil.rmtree(output_dir)
@@ -103,8 +91,8 @@ def main():
     
     initial_state = {"website_url": url}
     
-    print("Executing workflow...")
-    final_state = graph.invoke(initial_state)
+    print("Executing workflow via ReAct Agent...")
+    final_state = agent.graph.invoke(initial_state)
     
     toolkit = final_state.get("toolkit")
     if not toolkit:
@@ -114,30 +102,37 @@ def main():
     print("\nGeneration Complete!")
     
     # Save artifacts individually
+    output_dir.mkdir(parents=True, exist_ok=True)
     with open(output_dir / "brand_toolkit.json", "w", encoding="utf-8") as f:
         f.write(toolkit.model_dump_json(indent=2))
         
     if toolkit.competitor_profiles:
+        comp_dir.mkdir(parents=True, exist_ok=True)
         with open(comp_dir / "competitor_profiles.json", "w", encoding="utf-8") as f:
             f.write(json.dumps([c.model_dump() for c in toolkit.competitor_profiles], indent=2))
             
     if toolkit.brand_social_profile:
+        social_dir.mkdir(parents=True, exist_ok=True)
         with open(social_dir / "brand_social_profile.json", "w", encoding="utf-8") as f:
             f.write(toolkit.brand_social_profile.model_dump_json(indent=2))
             
     if toolkit.competitor_social_profiles:
+        social_dir.mkdir(parents=True, exist_ok=True)
         with open(social_dir / "competitor_social_profiles.json", "w", encoding="utf-8") as f:
             f.write(json.dumps([s.model_dump() for s in toolkit.competitor_social_profiles], indent=2))
             
     if toolkit.engagement_metrics:
+        analytics_dir.mkdir(parents=True, exist_ok=True)
         with open(analytics_dir / "engagement_metrics.json", "w", encoding="utf-8") as f:
             f.write(json.dumps([m.model_dump() for m in toolkit.engagement_metrics], indent=2))
             
     if toolkit.gap_analysis:
+        analytics_dir.mkdir(parents=True, exist_ok=True)
         with open(analytics_dir / "gap_analysis.json", "w", encoding="utf-8") as f:
             f.write(toolkit.gap_analysis.model_dump_json(indent=2))
             
     if toolkit.growth_strategy:
+        analytics_dir.mkdir(parents=True, exist_ok=True)
         with open(analytics_dir / "growth_strategy.json", "w", encoding="utf-8") as f:
             f.write(toolkit.growth_strategy.model_dump_json(indent=2))
             
