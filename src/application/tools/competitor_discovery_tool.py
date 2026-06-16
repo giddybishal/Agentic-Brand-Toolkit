@@ -9,18 +9,13 @@ class CompetitorDiscoveryToolSchema(BaseModel):
 class CompetitorDiscoveryTool(BrandTool):
     name = "discover_competitors"
     description = """
-    Description:
-    Use this tool to discover the brand's top competitors based on its profile.
+    Dependency:
+    - Requires: brand_profile
+    - Produces: competitors (list of competitor names)
+    - Used by: generate_competitor_intelligence
     
-    Input:
-    BrandProfile (must exist in memory).
-    
-    Output:
-    List of Competitors.
-    
-    The output is commonly used by:
-    - competitor intelligence tool
-    """
+    Rule: DO NOT use if competitors list is already Present. Use only when competitor analysis is requested.
+        """
     args_schema = CompetitorDiscoveryToolSchema
 
     def __init__(self, service: CompetitorDiscoveryService):

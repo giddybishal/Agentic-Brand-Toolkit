@@ -9,18 +9,13 @@ class VisualIdentityToolSchema(BaseModel):
 class VisualIdentityTool(BrandTool):
     name = "extract_visual_identity"
     description = """
-    Description:
-    Use this tool to extract visual identity elements (colors, logos, typography).
+    Dependency:
+    - Requires: website_url and website_content
+    - Produces: visual_identity (colors, fonts, logos)
+    - Used by: build_final_toolkit
     
-    Input:
-    Website URL (from memory).
-    
-    Output:
-    VisualIdentity.
-    
-    The output is commonly used by:
-    - toolkit builder
-    """
+    Rule: DO NOT use if visual_identity is already Present. Use ONLY if the user specifically asks for colors, logos, or visual branding (e.g. Designer mode).
+        """
     args_schema = VisualIdentityToolSchema
 
     def __init__(self, service: VisualIdentityService):

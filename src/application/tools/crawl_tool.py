@@ -9,25 +9,13 @@ class CrawlToolSchema(BaseModel):
 class CrawlTool(BrandTool):
     name = "crawl_website"
     description = """
-    Description:
-    Use this tool as the very first step to collect website content.
+    Dependency:
+    - Requires: website_url (Resolved brand URL)
+    - Produces: website_content (raw website text)
+    - Used by: extract_visual_identity, generate_brand_profile
     
-    Input:
-    Website URL.
-    
-    Output:
-    Raw website content (HTML/Text).
-    
-    This tool extracts:
-    - Text content from the website
-    - General brand messaging and copy
-    
-    The output is commonly used by:
-    - Visual identity tool
-    - Brand profile tool
-    
-    This tool should only be called once at the start of the workflow.
-    """
+    Rule: DO NOT use if website_content is already Present. Only use if explicit content crawling is required.
+        """
     args_schema = CrawlToolSchema
 
     def __init__(self, crawl_service: CrawlService):

@@ -9,18 +9,13 @@ class SocialDatasetToolSchema(BaseModel):
 class SocialDatasetTool(BrandTool):
     name = "generate_social_dataset"
     description = """
-    Description:
-    Use this tool to simulate realistic social media posts for the brand and its competitors.
+    Dependency:
+    - Requires: brand_profile, competitor_profiles
+    - Produces: brand_social_profile, competitor_social_profiles
+    - Used by: compute_engagement_analytics
     
-    Input:
-    BrandProfile and CompetitorProfiles (must exist in memory).
-    
-    Output:
-    BrandSocialProfile and List of CompetitorSocialProfiles.
-    
-    The output is commonly used by:
-    - engagement analytics tool
-    """
+    Rule: DO NOT use if social profiles are already Present. Use only when social media strategy or simulation is needed.
+        """
     args_schema = SocialDatasetToolSchema
 
     def __init__(self, service: SocialSimulationService):

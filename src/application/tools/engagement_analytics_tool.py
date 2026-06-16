@@ -9,18 +9,13 @@ class EngagementAnalyticsToolSchema(BaseModel):
 class EngagementAnalyticsTool(BrandTool):
     name = "compute_engagement_analytics"
     description = """
-    Description:
-    Use this tool to compute engagement analytics based on social datasets.
+    Dependency:
+    - Requires: brand_social_profile, competitor_social_profiles
+    - Produces: engagement_metrics
+    - Used by: perform_gap_analysis
     
-    Input:
-    BrandSocialProfile and CompetitorSocialProfiles (must exist in memory).
-    
-    Output:
-    List of EngagementMetrics.
-    
-    The output is commonly used by:
-    - gap analysis
-    """
+    Rule: DO NOT use if engagement_metrics is already Present. Use only for social analytics.
+        """
     args_schema = EngagementAnalyticsToolSchema
 
     def __init__(self, service: EngagementAnalyticsService):

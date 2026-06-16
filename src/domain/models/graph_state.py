@@ -21,3 +21,10 @@ class BrandState(TypedDict, total=False):
     gap_analysis: Optional[GapAnalysis]
     growth_strategy: Optional[GrowthStrategy]
     toolkit: Optional[BrandToolkit]
+    
+    # HITL and Resolution Tracking
+    resolved_brand_name: Optional[str]
+    resolved_url: Optional[str]
+    resolution_confidence: Optional[float]
+    human_approved_url: Optional[bool]
+    final_review_approved: Optional[bool]

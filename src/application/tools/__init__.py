@@ -10,6 +10,8 @@ from .gap_analysis_tool import GapAnalysisTool
 from .growth_strategy_tool import GrowthStrategyTool
 from .creator_guidelines_tool import CreatorGuidelinesTool
 from .toolkit_builder_tool import ToolkitBuilderTool
+from .resolve_brand_identity_tool import ResolveBrandIdentityTool
+from .request_human_review_tool import RequestHumanReviewTool
 
 __all__ = [
     "BrandTool",
@@ -23,5 +25,7 @@ __all__ = [
     "GapAnalysisTool",
     "GrowthStrategyTool",
     "CreatorGuidelinesTool",
-    "ToolkitBuilderTool"
+    "ToolkitBuilderTool",
+    "ResolveBrandIdentityTool",
+    "RequestHumanReviewTool"
 ]

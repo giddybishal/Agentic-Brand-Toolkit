@@ -9,18 +9,13 @@ class GrowthStrategyToolSchema(BaseModel):
 class GrowthStrategyTool(BrandTool):
     name = "generate_growth_strategy"
     description = """
-    Description:
-    Use this tool to generate a social growth strategy.
+    Dependency:
+    - Requires: brand_profile, gap_analysis
+    - Produces: growth_strategy
+    - Used by: build_final_toolkit
     
-    Input:
-    BrandProfile, GapAnalysis, EngagementMetrics, and CompetitorProfiles (must exist in memory).
-    
-    Output:
-    GrowthStrategy.
-    
-    The output is commonly used by:
-    - toolkit builder
-    """
+    Rule: DO NOT use if growth_strategy is already Present. Use only for marketing growth strategy requests.
+        """
     args_schema = GrowthStrategyToolSchema
 
     def __init__(self, service: StrategyService):

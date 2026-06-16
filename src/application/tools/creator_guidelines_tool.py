@@ -9,18 +9,13 @@ class CreatorGuidelinesToolSchema(BaseModel):
 class CreatorGuidelinesTool(BrandTool):
     name = "generate_creator_guidelines"
     description = """
-    Description:
-    Use this tool to generate content creator guidelines for the brand.
+    Dependency:
+    - Requires: brand_profile
+    - Produces: creator_guidelines
+    - Used by: build_final_toolkit
     
-    Input:
-    BrandProfile (must exist in memory).
-    
-    Output:
-    CreatorGuidelines.
-    
-    The output is commonly used by:
-    - toolkit builder
-    """
+    Rule: DO NOT use if creator_guidelines is already Present. Use only for influencer/creator documentation requests.
+        """
     args_schema = CreatorGuidelinesToolSchema
 
     def __init__(self, service: CreatorGuidelinesService):

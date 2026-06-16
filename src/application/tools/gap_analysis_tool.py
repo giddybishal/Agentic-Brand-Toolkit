@@ -9,18 +9,13 @@ class GapAnalysisToolSchema(BaseModel):
 class GapAnalysisTool(BrandTool):
     name = "perform_gap_analysis"
     description = """
-    Description:
-    Use this tool to perform a competitive gap analysis.
+    Dependency:
+    - Requires: brand_profile, competitor_profiles, engagement_metrics
+    - Produces: gap_analysis
+    - Used by: generate_growth_strategy
     
-    Input:
-    BrandProfile, EngagementMetrics, and CompetitorProfiles (must exist in memory).
-    
-    Output:
-    GapAnalysis.
-    
-    The output is commonly used by:
-    - growth strategy tool
-    """
+    Rule: DO NOT use if gap_analysis is already Present. Use for strategic marketing comparisons.
+        """
     args_schema = GapAnalysisToolSchema
 
     def __init__(self, service: StrategyService):

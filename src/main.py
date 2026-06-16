@@ -31,13 +31,16 @@ from src.application.tools import (
     GapAnalysisTool,
     GrowthStrategyTool,
     CreatorGuidelinesTool,
-    ToolkitBuilderTool
+    ToolkitBuilderTool,
+    ResolveBrandIdentityTool,
+    RequestHumanReviewTool
 )
 from src.application.agents.brand_intelligence_agent import BrandIntelligenceAgent
+from langgraph.types import Command
 
 def main():
-    url = sys.argv[1] if len(sys.argv) > 1 else "https://www.drinklucent.com/"
-    print(f"Starting Agentic Brand Toolkit Generation for URL: {url}\n")
+    query = sys.argv[1] if len(sys.argv) > 1 else "what color palette does Drink Lucent use?"
+    print(f"Starting Agentic Brand Toolkit Analysis for Query: '{query}'\n")
 
     # 1. Initialize Adapters
     crawler = CrawlerAdapter()
@@ -59,6 +62,7 @@ def main():
 
     # 3. Initialize Tools
     tools = [
+        ResolveBrandIdentityTool(),
         CrawlTool(crawl_service),
         VisualIdentityTool(visual_service),
         BrandProfileTool(profile_service),
@@ -69,7 +73,8 @@ def main():
         GapAnalysisTool(strategy_service),
         GrowthStrategyTool(strategy_service),
         CreatorGuidelinesTool(guidelines_service),
-        ToolkitBuilderTool(toolkit_service)
+        ToolkitBuilderTool(toolkit_service),
+        RequestHumanReviewTool()
     ]
 
     # 4. Build Agent
@@ -85,58 +90,84 @@ def main():
     social_dir = output_dir / "social_profiles"
     analytics_dir = output_dir / "analytics"
     
-    comp_dir.mkdir(exist_ok=True)
-    social_dir.mkdir(exist_ok=True)
-    analytics_dir.mkdir(exist_ok=True)
-    
-    initial_state = {"website_url": url}
+    initial_state = {"query": query}
     
     print("Executing workflow via ReAct Agent...")
-    final_state = agent.graph.invoke(initial_state)
+    config = {"configurable": {"thread_id": "cli_run_1"}}
+    state = agent.graph.invoke(initial_state, config)
+    
+    while True:
+        snapshot = agent.graph.get_state(config)
+        if not snapshot.next:
+            break
+            
+        interrupts = snapshot.tasks[0].interrupts if snapshot.tasks else ()
+        interrupt_value = interrupts[0].value if interrupts else "Graph paused. Please provide input to resume: "
+        
+        print("\n=== HUMAN-IN-THE-LOOP ===")
+        user_input = input(f"{interrupt_value}\n> ")
+        
+        print("\nResuming graph execution...")
+        state = agent.graph.invoke(Command(resume=user_input), config)
+        
+    final_state = state
     
     toolkit = final_state.get("toolkit")
-    if not toolkit:
-        print("Failed to generate toolkit.")
-        return
-
     print("\nGeneration Complete!")
     
     # Save artifacts individually
     output_dir.mkdir(parents=True, exist_ok=True)
-    with open(output_dir / "brand_toolkit.json", "w", encoding="utf-8") as f:
-        f.write(toolkit.model_dump_json(indent=2))
-        
-    if toolkit.competitor_profiles:
+    
+    toolkit = final_state.get("toolkit")
+    if toolkit:
+        with open(output_dir / "brand_toolkit.json", "w", encoding="utf-8") as f:
+            f.write(toolkit.model_dump_json(indent=2))
+            
+    # Always save whatever partial artifacts exist in the final state
+    competitor_profiles = final_state.get("competitor_profiles")
+    if competitor_profiles:
         comp_dir.mkdir(parents=True, exist_ok=True)
         with open(comp_dir / "competitor_profiles.json", "w", encoding="utf-8") as f:
-            f.write(json.dumps([c.model_dump() for c in toolkit.competitor_profiles], indent=2))
+            # Handle both lists of pydantic models and raw dicts
+            data = [c.model_dump() if hasattr(c, "model_dump") else c for c in competitor_profiles]
+            f.write(json.dumps(data, indent=2))
             
-    if toolkit.brand_social_profile:
+    brand_social_profile = final_state.get("brand_social_profile")
+    if brand_social_profile:
         social_dir.mkdir(parents=True, exist_ok=True)
         with open(social_dir / "brand_social_profile.json", "w", encoding="utf-8") as f:
-            f.write(toolkit.brand_social_profile.model_dump_json(indent=2))
+            data = brand_social_profile.model_dump_json(indent=2) if hasattr(brand_social_profile, "model_dump_json") else json.dumps(brand_social_profile, indent=2)
+            f.write(data)
             
-    if toolkit.competitor_social_profiles:
+    competitor_social_profiles = final_state.get("competitor_social_profiles")
+    if competitor_social_profiles:
         social_dir.mkdir(parents=True, exist_ok=True)
         with open(social_dir / "competitor_social_profiles.json", "w", encoding="utf-8") as f:
-            f.write(json.dumps([s.model_dump() for s in toolkit.competitor_social_profiles], indent=2))
+            data = [s.model_dump() if hasattr(s, "model_dump") else s for s in competitor_social_profiles]
+            f.write(json.dumps(data, indent=2))
             
-    if toolkit.engagement_metrics:
+    engagement_metrics = final_state.get("engagement_metrics")
+    if engagement_metrics:
         analytics_dir.mkdir(parents=True, exist_ok=True)
         with open(analytics_dir / "engagement_metrics.json", "w", encoding="utf-8") as f:
-            f.write(json.dumps([m.model_dump() for m in toolkit.engagement_metrics], indent=2))
+            data = [m.model_dump() if hasattr(m, "model_dump") else m for m in engagement_metrics]
+            f.write(json.dumps(data, indent=2))
             
-    if toolkit.gap_analysis:
+    gap_analysis = final_state.get("gap_analysis")
+    if gap_analysis:
         analytics_dir.mkdir(parents=True, exist_ok=True)
         with open(analytics_dir / "gap_analysis.json", "w", encoding="utf-8") as f:
-            f.write(toolkit.gap_analysis.model_dump_json(indent=2))
+            data = gap_analysis.model_dump_json(indent=2) if hasattr(gap_analysis, "model_dump_json") else json.dumps(gap_analysis, indent=2)
+            f.write(data)
             
-    if toolkit.growth_strategy:
+    growth_strategy = final_state.get("growth_strategy")
+    if growth_strategy:
         analytics_dir.mkdir(parents=True, exist_ok=True)
         with open(analytics_dir / "growth_strategy.json", "w", encoding="utf-8") as f:
-            f.write(toolkit.growth_strategy.model_dump_json(indent=2))
+            data = growth_strategy.model_dump_json(indent=2) if hasattr(growth_strategy, "model_dump_json") else json.dumps(growth_strategy, indent=2)
+            f.write(data)
             
-    print(f"Toolkit and artifacts saved to {output_dir}")
+    print(f"Artifacts saved to {output_dir}")
 
 if __name__ == "__main__":
     main()

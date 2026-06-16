@@ -9,28 +9,13 @@ class BrandProfileToolSchema(BaseModel):
 class BrandProfileTool(BrandTool):
     name = "generate_brand_profile"
     description = """
-    Description:
-    Use this tool after website content has been collected.
+    Dependency:
+    - Requires: website_content
+    - Produces: brand_profile (structured summary, mission, positioning)
+    - Used by: discover_competitors, generate_creator_guidelines, build_final_toolkit
     
-    Input:
-    Website content (must already exist in memory).
-    
-    Output:
-    BrandProfile.
-    
-    This tool extracts:
-    - brand name
-    - mission
-    - products
-    - positioning
-    
-    The output is commonly used by:
-    - competitor discovery
-    - creator guidelines
-    - growth strategy
-    
-    The tool should not be called before website content exists.
-    """
+    Rule: DO NOT use if brand_profile is already Present. Use for HR, General, or Marketing overviews of the company.
+        """
     args_schema = BrandProfileToolSchema
 
     def __init__(self, service: BrandProfileService):

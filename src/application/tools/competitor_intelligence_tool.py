@@ -9,19 +9,13 @@ class CompetitorIntelligenceToolSchema(BaseModel):
 class CompetitorIntelligenceTool(BrandTool):
     name = "generate_competitor_intelligence"
     description = """
-    Description:
-    Use this tool to extract detailed intelligence profiles for discovered competitors.
+    Dependency:
+    - Requires: competitors list
+    - Produces: competitor_profiles (detailed competitor data)
+    - Used by: perform_gap_analysis, build_final_toolkit
     
-    Input:
-    List of Competitors (must exist in memory).
-    
-    Output:
-    List of CompetitorProfiles.
-    
-    The output is commonly used by:
-    - social dataset tool
-    - gap analysis
-    """
+    Rule: DO NOT use if competitor_profiles is already Present. Use only when deep competitor analysis is requested.
+        """
     args_schema = CompetitorIntelligenceToolSchema
 
     def __init__(self, service: CompetitorDiscoveryService):
